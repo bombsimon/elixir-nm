@@ -10,12 +10,6 @@ defmodule Nm do
 
   @doc """
   Start the game with desired amount of objects.
-
-  ## Examples
-
-      iex> Nm.play(20)
-      ...
-      "Game over!"
   """
   def play(starting_stack) do
     stack = starting_stack
@@ -36,10 +30,13 @@ defmodule Nm do
         # Move based on input
         stack = get_move() |> make_move(stack)
 
-        if stack > 1 do
-          # Move based on generated move
-          stack = generate_move(stack) |> make_move(stack)
-        end
+        stack =
+          if stack > 1 do
+            # Move based on generated move
+            generate_move(stack) |> make_move(stack)
+          else
+            stack
+          end
 
         run(stack)
     end
@@ -70,23 +67,32 @@ defmodule Nm do
 
   @doc """
   Take input from a user and use as a move
-
-  ## Examples
-
-      iex> Nm.get_move()
-      Objects to remove: 6
-      6
   """
   def get_move do
     i = IO.gets ">>> Objects to remove: "
 
-    case Integer.parse(i) do
+    case validate_input(i) do
+      x when x == :error -> get_move()
+      x -> x
+    end
+  end
+
+  @doc """
+  Validate user input
+
+  ## Examples
+
+      iex> Nm.validate_input(\"10\\n\")
+      10
+  """
+  def validate_input(input) do
+    case Integer.parse(input) do
       x when x  == :error ->
         IO.puts "Not a number, try again"
-        get_move()
+        :error
       {_, ok} when ok != "\n" ->
         IO.puts "Not a valid integer (single digit), try again"
-        get_move()
+        :error
       {x, _} -> x
     end
   end
@@ -96,8 +102,9 @@ defmodule Nm do
 
   ## Examples
 
-      iex> Nm.generate_move(10)
-      4
+      iex> r = Nm.generate_move(10)
+      iex> r > 0 && r < 5
+      true
   """
   def generate_move(stack) do
     Kernel.trunc(stack/2)
@@ -110,7 +117,7 @@ defmodule Nm do
   ## Examples
 
       iex> Nm.remove_object(10, 2)
-      {8, "ok", true}
+      {8, "Ok", true}
   """
   def remove_object(stack, to_remove) do
     case to_remove do
